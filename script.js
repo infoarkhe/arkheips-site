@@ -1,21 +1,67 @@
 (function () {
   "use strict";
 
-  var reduceMotion = document.documentElement.dataset.motion === "reduce";
+  var root = document.documentElement;
+  var gate = document.querySelector(".gate");
+  var reduceMotion = root.dataset.motion === "reduce";
+  var search = window.location.search;
 
   var yearEl = document.getElementById("year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
-  /* ?static : animasyonlari bitmis halde dondurur (gorsel kontrol icin) */
-  if (/[?&]static\b/.test(window.location.search)) {
-    var gate = document.querySelector(".gate");
-    if (gate) gate.classList.add("is-static");
+  /* ?static : animasyonlar bitmis halde donar (gorsel kontrol) */
+  if (gate && /[?&]static\b/.test(search)) gate.classList.add("is-static");
+
+  /* ?lite / ?full : hafif modu elle ac veya kapat */
+  var forceLite = /[?&]lite\b/.test(search);
+  var forceFull = /[?&]full\b/.test(search);
+
+  /* ---------- Hafif mod: zayif makinede parlama ve isiklar kapanir ---------- */
+  var liteOn = false;
+  function setLite(on) {
+    if (!gate || liteOn === on) return;
+    liteOn = on;
+    gate.classList.toggle("is-lite", on);
   }
 
-  /* ---------- Arka plan videolari: blob olarak yukle, IDM gormesin ---------- */
+  function pickInitialMode() {
+    if (forceFull) return false;
+    if (forceLite) return true;
+    var nav = window.navigator || {};
+    var cores = nav.hardwareConcurrency || 8;
+    var mem = nav.deviceMemory || 8;
+    var saveData = nav.connection && nav.connection.saveData;
+    return cores <= 4 || mem <= 4 || !!saveData;
+  }
+  setLite(pickInitialMode());
+
+  /* Ilk saniyelerde kare suresini olc; 33 ms uzeri (30 fps alti) ise hafif moda gec */
+  if (!forceFull && !liteOn && !reduceMotion) {
+    var samples = 0, slow = 0, last = 0;
+    function probe(ts) {
+      if (last) {
+        var dt = ts - last;
+        if (dt > 0 && dt < 1000) {
+          samples++;
+          if (dt > 33) slow++;
+        }
+      }
+      last = ts;
+      if (samples < 90) {
+        requestAnimationFrame(probe);
+      } else if (slow / samples > 0.35) {
+        setLite(true);
+      }
+    }
+    setTimeout(function () { requestAnimationFrame(probe); }, 1500);
+  }
+
+  /* ---------- Arka plan videolari: blob olarak yukle ---------- */
   var blocked = [];
+  var videos = Array.prototype.slice.call(document.querySelectorAll(".bg-video[data-src]"));
 
   function play(video) {
+    if (document.hidden) return;
     video.muted = true;
     var p = video.play();
     if (p && typeof p.catch === "function") {
@@ -28,9 +74,7 @@
   function retryBlocked() {
     var pending = blocked.slice();
     blocked.length = 0;
-    pending.forEach(function (v) {
-      if (v.paused) play(v);
-    });
+    pending.forEach(function (v) { if (v.paused) play(v); });
   }
 
   ["pointerdown", "keydown", "touchstart", "scroll"].forEach(function (evt) {
@@ -62,44 +106,50 @@
       });
   }
 
-  var videos = Array.prototype.slice.call(document.querySelectorAll(".bg-video[data-src]"));
-
   function startVideos() {
     if (reduceMotion) return;
     videos.forEach(loadVideo);
   }
 
-  if (document.readyState === "complete") {
-    startVideos();
-  } else {
-    window.addEventListener("load", startVideos, { once: true });
+  if (document.readyState === "complete") startVideos();
+  else window.addEventListener("load", startVideos, { once: true });
+
+  /* ---------- Sekme gizlenince her seyi durdur, gorununce devam et ---------- */
+  var svgs = Array.prototype.slice.call(document.querySelectorAll("svg.pcb, svg.wave"));
+
+  function pauseAll() {
+    if (gate) gate.classList.add("is-paused");
+    videos.forEach(function (v) { if (!v.paused) v.pause(); });
+    svgs.forEach(function (s) { if (s.pauseAnimations) s.pauseAnimations(); });
   }
 
-  /* ---------- Canli kW degeri ---------- */
+  function resumeAll() {
+    if (gate) gate.classList.remove("is-paused");
+    svgs.forEach(function (s) { if (s.unpauseAnimations) s.unpauseAnimations(); });
+    videos.forEach(function (v) { if (v.src && v.paused) play(v); });
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) pauseAll();
+    else resumeAll();
+  });
+
+  window.addEventListener("pagehide", pauseAll);
+
+  /* ---------- Canli kW degeri: saniyede 6 guncelleme yeterli ---------- */
   var kwEl = document.getElementById("live-kw");
   if (kwEl && !reduceMotion) {
-    var base = 68.4;
-    var current = base;
-    var target = base;
-    var lastTick = 0;
-
+    var base = 68.4, current = base, target = base, tick = 0;
     function pickTarget() {
-      var drift = (Math.random() - 0.5) * 6.5;
-      target = Math.max(52, Math.min(84, base + drift));
+      target = Math.max(52, Math.min(84, base + (Math.random() - 0.5) * 6.5));
     }
-
-    function frame(ts) {
-      if (ts - lastTick > 1400) {
-        pickTarget();
-        lastTick = ts;
-      }
-      current += (target - current) * 0.035;
-      kwEl.textContent = current.toFixed(2);
-      requestAnimationFrame(frame);
-    }
-
     pickTarget();
-    requestAnimationFrame(frame);
+    setInterval(function () {
+      if (document.hidden) return;
+      if (++tick % 9 === 0) pickTarget();
+      current += (target - current) * 0.18;
+      kwEl.textContent = current.toFixed(2);
+    }, 160);
   }
 
   /* ---------- Klavye: ok tuslariyla panel secimi ---------- */

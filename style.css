@@ -81,10 +81,8 @@ body {
   pointer-events: auto;
   padding: 10px 18px;
   border-radius: 999px;
-  background: rgba(7, 11, 20, 0.55);
+  background: rgba(7, 11, 20, 0.8);
   border: 1px solid var(--line);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .brand img {
@@ -163,22 +161,22 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 1.2s ease, transform 1.4s var(--ease);
-  transform: scale(1.06) translateZ(0);
-  will-change: opacity, transform;
+  transition: opacity 1.2s ease;
+  transform: translateZ(0);
+  will-change: opacity;
   backface-visibility: hidden;
 }
 
 .bg-video.is-ready { opacity: 1; }
 
-/* Tonlama videonun icine islendi; CSS filtre yok */
+/* Tonlama videonun icine islendi; CSS filtre ve olcek donusumu yok */
 .pane-xr .bg-video { object-position: 55% 50%; }
 .pane-xr .bg-video.is-ready { opacity: 0.62; }
-.pane-xr:hover .bg-video.is-ready { opacity: 0.88; transform: scale(1.0) translateZ(0); }
+.pane-xr:hover .bg-video.is-ready { opacity: 0.88; }
 
 .pane-em .bg-video { object-position: 50% 45%; }
 .pane-em .bg-video.is-ready { opacity: 0.42; }
-.pane-em:hover .bg-video.is-ready { opacity: 0.62; transform: scale(1.0) translateZ(0); }
+.pane-em:hover .bg-video.is-ready { opacity: 0.62; }
 
 /* Video uzerine ton katmani */
 .pane-tint {
@@ -243,6 +241,11 @@ body {
   pointer-events: none;
   opacity: 0.9;
   transition: opacity 0.6s ease;
+  /* Kendi katmani: animasyon yalnizca bu SVG'yi yeniden cizdirir,
+     altindaki gradyan ve izgara katmanlarina dokunmaz */
+  transform: translateZ(0);
+  will-change: transform;
+  contain: strict;
 }
 
 .pcb .trace {
@@ -253,28 +256,18 @@ body {
   stroke-linejoin: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  opacity: 0.85;
+  --o: 0.85;
+  opacity: var(--o);
   animation: trace-draw 11s var(--ease) infinite;
   animation-delay: var(--d, 0s);
 }
 
-.pcb .trace.thin { stroke-width: 1.4; opacity: 0.6; }
+.pcb .trace.thin { stroke-width: 1.4; --o: 0.6; }
 
-/* Parlama katmani: ayni izler ayri bir SVG'de, tek GPU bulanikligi.
-   Oge basina drop-shadow yerine katman basina bir blur; gorunum ayni, maliyet dusuk. */
-.pcb-glow {
-  filter: blur(7px);
-  will-change: filter, opacity;
-  opacity: 0.8;
-}
-
-.pcb-glow .trace {
-  stroke-width: 6;
-  stroke: var(--xr-accent-2);
-  opacity: 0.9;
-}
-
-.pcb-glow .pad-core { fill: var(--xr-accent-2); }
+/* Parlama: hicbir filtre yok. Ayni yolun altinda iki genis, cok soluk cizgi
+   yumusak hale etkisi verir; tarayici icin duz cizgi cizmekten farki yok. */
+.pcb .trace.g1 { stroke-width: 12; stroke: var(--xr-accent-2); --o: 0.07; }
+.pcb .trace.g2 { stroke-width: 5.5; stroke: var(--xr-accent-2); --o: 0.17; }
 
 .pcb .pad {
   fill: var(--xr-bg);
@@ -315,9 +308,9 @@ body {
 
 @keyframes trace-draw {
   0%   { stroke-dashoffset: 1; opacity: 0; }
-  4%   { opacity: 0.85; }
-  28%  { stroke-dashoffset: 0; opacity: 0.85; }
-  78%  { stroke-dashoffset: 0; opacity: 0.85; }
+  4%   { opacity: var(--o, 0.85); }
+  28%  { stroke-dashoffset: 0; opacity: var(--o, 0.85); }
+  78%  { stroke-dashoffset: 0; opacity: var(--o, 0.85); }
   92%  { opacity: 0; stroke-dashoffset: 0; }
   100% { opacity: 0; stroke-dashoffset: 1; }
 }
@@ -342,6 +335,9 @@ body {
   width: 100%;
   pointer-events: none;
   opacity: 0.55;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: strict;
 }
 
 .wave path {
@@ -353,15 +349,9 @@ body {
   animation: wave-flow 3.2s linear infinite;
 }
 
-/* Dalga parlamasi: ayni dalga ayri SVG'de, katman basina tek blur */
-.wave-glow {
-  filter: blur(5px);
-  will-change: filter;
-  opacity: 0.7;
-}
-
-.wave-glow path { stroke-width: 4.5; }
-.wave-glow path.soft-glow { display: none; }
+/* Dalga parlamasi: filtre yok, ust uste soluk genis cizgiler */
+.wave path.g1 { stroke-width: 10; opacity: 0.09; }
+.wave path.g2 { stroke-width: 4.5; opacity: 0.2; }
 
 .wave path.soft { stroke: var(--em-accent-2); opacity: 0.45; stroke-dasharray: 2 14; animation-duration: 4.6s; }
 
@@ -410,17 +400,10 @@ body {
   transform: translate(-54%, -52%) rotate(-4deg);
   opacity: 0.11;
   pointer-events: none;
-  will-change: transform;
-  animation: mark-breathe 12s ease-in-out infinite;
   transition: opacity 0.8s ease;
 }
 
 .pane-xr:hover .xr-watermark { opacity: 0.16; }
-
-@keyframes mark-breathe {
-  0%, 100% { transform: translate(-54%, -52%) rotate(-4deg) scale(1); }
-  50% { transform: translate(-54%, -50%) rotate(-2.5deg) scale(1.035); }
-}
 
 .xr-wordmark {
   width: clamp(262px, 29.5vw, 415px);
@@ -429,7 +412,7 @@ body {
 }
 
 /* Hata ayiklama: ?static ile animasyonlar bitmis halde donar */
-.is-static .pcb .trace { animation: none; stroke-dashoffset: 0; opacity: 0.85; }
+.is-static .pcb .trace { animation: none; stroke-dashoffset: 0; opacity: var(--o, 0.85); }
 .is-static .pcb .pad, .is-static .pcb .pad-core { animation: none; opacity: 1; }
 .is-static .bg-video { opacity: 0.6; }
 
@@ -473,10 +456,9 @@ body {
   padding: 10px 18px;
   border-radius: 12px;
   border: 1px solid rgba(62, 224, 255, 0.22);
-  background: rgba(7, 11, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(7, 11, 20, 0.8);
   font-variant-numeric: tabular-nums;
+  contain: layout paint;
 }
 
 .live-chip .dot {
@@ -535,9 +517,24 @@ body {
   transition: opacity 0.6s ease;
 }
 
-.pane-xr::after { box-shadow: inset 0 0 160px rgba(226, 180, 90, 0.12); }
-.pane-em::after { box-shadow: inset 0 0 160px rgba(62, 224, 255, 0.12); }
+.pane-xr::after { background: radial-gradient(80% 80% at 50% 50%, transparent 55%, rgba(226, 180, 90, 0.14) 100%); }
+.pane-em::after { background: radial-gradient(80% 80% at 50% 50%, transparent 55%, rgba(62, 224, 255, 0.14) 100%); }
 .pane:hover::after { opacity: 1; }
+
+/* Sekme arka plandayken: her sey durur */
+.is-paused *,
+.is-paused *::before,
+.is-paused *::after { animation-play-state: paused !important; }
+
+/* Hafif mod: yavas makinede otomatik. Parlama, isik darbeleri ve izgara kapanir,
+   izler ve videolar kalir. */
+.is-lite .pcb .glow-layer,
+.is-lite .pcb .pulse-layer,
+.is-lite .wave path.g1,
+.is-lite .wave path.g2,
+.is-lite .pane-grid { display: none; }
+.is-lite .xr-watermark { opacity: 0.08; }
+.is-lite .pane, .is-lite .pane-content, .is-lite .bg-video { transition: none; }
 
 /* Alt bant */
 .gate-foot {
