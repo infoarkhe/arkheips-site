@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /xreverse/
+
+Sitemap: https://arkheips.com/sitemap.xml

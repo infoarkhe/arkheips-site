@@ -1,0 +1,42 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # www adresini koke yonlendir (tek kanonik adres)
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # Builder doneminden kalan eski urun adresleri
+  RewriteRule ^energymeter1/?$ /energymeter/ [R=301,L]
+  RewriteRule ^energymeter1\.html$ /energymeter/ [R=301,L]
+
+  # Klasor adresleri sonunda egik cizgiyle standartlassin
+  RewriteRule ^energymeter$ /energymeter/ [R=301,L]
+  RewriteRule ^xreverse$ /xreverse/ [R=301,L]
+</IfModule>
+
+# Video dosyalari medya uzantisi ve medya MIME tipi tasimaz.
+# Indirme yoneticileri (IDM vb.) bunlari akis olarak taniyamaz.
+<IfModule mod_mime.c>
+  AddType application/octet-stream .bin
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.bin$">
+    Header set Cache-Control "public, max-age=604800"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Robots-Tag "noindex, nofollow"
+  </FilesMatch>
+
+  # HTML her zaman taze alinsin; CSS ve JS surum parametresiyle yonetilir
+  <FilesMatch "\.html$">
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </FilesMatch>
+
+  <FilesMatch "\.(css|js|svg)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+</IfModule>
+
+ErrorDocument 404 /index.html
