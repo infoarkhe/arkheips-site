@@ -231,7 +231,7 @@ body {
   opacity: 0.6;
 }
 
-/* ---------- PCB iz animasyonu ---------- */
+/* ---------- PCB iz animasyonu: canvas, 20 kare/sn, dusuk cozunurluk ---------- */
 .pcb {
   position: absolute;
   inset: 0;
@@ -241,90 +241,9 @@ body {
   pointer-events: none;
   opacity: 0.9;
   transition: opacity 0.6s ease;
-  /* Kendi katmani: animasyon yalnizca bu SVG'yi yeniden cizdirir,
-     altindaki gradyan ve izgara katmanlarina dokunmaz */
-  transform: translateZ(0);
-  will-change: transform;
-  contain: strict;
 }
 
-.pcb .trace {
-  fill: none;
-  stroke: var(--xr-accent);
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  --o: 0.85;
-  opacity: var(--o);
-  animation: trace-draw 11s var(--ease) infinite;
-  animation-delay: var(--d, 0s);
-}
-
-.pcb .trace.thin { stroke-width: 1.4; --o: 0.6; }
-
-/* Parlama: hicbir filtre yok. Ayni yolun altinda iki genis, cok soluk cizgi
-   yumusak hale etkisi verir; tarayici icin duz cizgi cizmekten farki yok. */
-.pcb .trace.g1 { stroke-width: 12; stroke: var(--xr-accent-2); --o: 0.07; }
-.pcb .trace.g2 { stroke-width: 5.5; stroke: var(--xr-accent-2); --o: 0.17; }
-
-.pcb .pad {
-  fill: var(--xr-bg);
-  stroke: var(--xr-accent-2);
-  stroke-width: 2;
-  opacity: 0;
-  animation: pad-pop 11s ease infinite;
-  animation-delay: calc(var(--d, 0s) + 2.6s);
-}
-
-.pcb .pad-core {
-  fill: var(--xr-accent-2);
-  opacity: 0;
-  animation: pad-pop 11s ease infinite;
-  animation-delay: calc(var(--d, 0s) + 2.7s);
-}
-
-.pcb .chip {
-  fill: rgba(10, 14, 18, 0.9);
-  stroke: rgba(240, 207, 138, 0.55);
-  stroke-width: 1.5;
-}
-
-.pcb .chip-pin {
-  fill: var(--xr-accent);
-  opacity: 0.75;
-}
-
-.pcb .chip-label {
-  fill: rgba(240, 207, 138, 0.6);
-  font-family: "Consolas", "Courier New", monospace;
-  font-size: 10px;
-  letter-spacing: 0.18em;
-}
-
-/* Isik darbesi: radyal gradyan dolgu, filtre yok */
-.pcb .pulse { fill: url(#pulseGrad); }
-
-@keyframes trace-draw {
-  0%   { stroke-dashoffset: 1; opacity: 0; }
-  4%   { opacity: var(--o, 0.85); }
-  28%  { stroke-dashoffset: 0; opacity: var(--o, 0.85); }
-  78%  { stroke-dashoffset: 0; opacity: var(--o, 0.85); }
-  92%  { opacity: 0; stroke-dashoffset: 0; }
-  100% { opacity: 0; stroke-dashoffset: 1; }
-}
-
-@keyframes pad-pop {
-  0%   { opacity: 0; transform: scale(0.4); transform-box: fill-box; transform-origin: center; }
-  6%   { opacity: 1; transform: scale(1.25); transform-box: fill-box; transform-origin: center; }
-  10%  { transform: scale(1); transform-box: fill-box; transform-origin: center; }
-  72%  { opacity: 1; }
-  86%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-
-/* EnerjiMetre tarafi: enerji dalgasi */
+/* EnerjiMetre tarafi: enerji dalgasi (canvas) */
 .wave {
   position: absolute;
   left: 0;
@@ -335,27 +254,7 @@ body {
   width: 100%;
   pointer-events: none;
   opacity: 0.55;
-  transform: translateZ(0);
-  will-change: transform;
-  contain: strict;
 }
-
-.wave path {
-  fill: none;
-  stroke: var(--em-accent);
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-dasharray: 6 10;
-  animation: wave-flow 3.2s linear infinite;
-}
-
-/* Dalga parlamasi: filtre yok, ust uste soluk genis cizgiler */
-.wave path.g1 { stroke-width: 10; opacity: 0.09; }
-.wave path.g2 { stroke-width: 4.5; opacity: 0.2; }
-
-.wave path.soft { stroke: var(--em-accent-2); opacity: 0.45; stroke-dasharray: 2 14; animation-duration: 4.6s; }
-
-@keyframes wave-flow { to { stroke-dashoffset: -160; } }
 
 /* ---------- icerik ---------- */
 .pane-content {
@@ -412,8 +311,6 @@ body {
 }
 
 /* Hata ayiklama: ?static ile animasyonlar bitmis halde donar */
-.is-static .pcb .trace { animation: none; stroke-dashoffset: 0; opacity: var(--o, 0.85); }
-.is-static .pcb .pad, .is-static .pcb .pad-core { animation: none; opacity: 1; }
 .is-static .bg-video { opacity: 0.6; }
 
 .em-title {
@@ -526,12 +423,16 @@ body {
 .is-paused *::before,
 .is-paused *::after { animation-play-state: paused !important; }
 
+/* Teshis anahtarlari (?no=...) */
+.no-video .bg-video { display: none; }
+.no-traces .pcb { display: none; }
+.no-grid .pane-grid { display: none; }
+.no-watermark .xr-watermark { display: none; }
+.no-wave .wave { display: none; }
+.no-tint .pane-tint { display: none; }
+
 /* Hafif mod: yavas makinede otomatik. Parlama, isik darbeleri ve izgara kapanir,
    izler ve videolar kalir. */
-.is-lite .pcb .glow-layer,
-.is-lite .pcb .pulse-layer,
-.is-lite .wave path.g1,
-.is-lite .wave path.g2,
 .is-lite .pane-grid { display: none; }
 .is-lite .xr-watermark { opacity: 0.08; }
 .is-lite .pane, .is-lite .pane-content, .is-lite .bg-video { transition: none; }
