@@ -81,10 +81,8 @@ body {
   pointer-events: auto;
   padding: 10px 18px;
   border-radius: 999px;
-  background: rgba(7, 11, 20, 0.55);
+  background: rgba(7, 11, 20, 0.82);
   border: 1px solid var(--line);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 .brand img {
@@ -125,6 +123,7 @@ body {
   color: inherit;
   overflow: hidden;
   isolation: isolate;
+  contain: paint;
   transition: flex 0.7s var(--ease);
 }
 
@@ -162,27 +161,22 @@ body {
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity 1.2s ease, transform 1.4s var(--ease), filter 0.8s ease;
-  transform: scale(1.06);
+  transition: opacity 1.2s ease, transform 1.4s var(--ease);
+  transform: scale(1.06) translateZ(0);
+  will-change: opacity, transform;
+  backface-visibility: hidden;
 }
 
 .bg-video.is-ready { opacity: 1; }
 
-.pane-xr .bg-video {
-  object-position: 55% 50%;
-  opacity: 0;
-  filter: saturate(0.9) brightness(0.72);
-}
-.pane-xr .bg-video.is-ready { opacity: 0.62; }
-.pane-xr:hover .bg-video.is-ready { opacity: 0.88; transform: scale(1.0); filter: saturate(1) brightness(0.85); }
+/* Tonlama videonun icine islendi; CSS filtre yok */
+.pane-xr .bg-video { object-position: 55% 50%; }
+.pane-xr .bg-video.is-ready { opacity: 0.7; }
+.pane-xr:hover .bg-video.is-ready { opacity: 0.92; transform: scale(1.0) translateZ(0); }
 
-.pane-em .bg-video {
-  object-position: 50% 45%;
-  filter: brightness(0.55) contrast(1.05);
-  mix-blend-mode: screen;
-}
-.pane-em .bg-video.is-ready { opacity: 0.42; }
-.pane-em:hover .bg-video.is-ready { opacity: 0.62; transform: scale(1.0); filter: brightness(0.7) contrast(1.05); }
+.pane-em .bg-video { object-position: 50% 45%; }
+.pane-em .bg-video.is-ready { opacity: 0.55; }
+.pane-em:hover .bg-video.is-ready { opacity: 0.75; transform: scale(1.0) translateZ(0); }
 
 /* Video uzerine ton katmani */
 .pane-tint {
@@ -260,10 +254,17 @@ body {
   opacity: 0.85;
   animation: trace-draw 11s var(--ease) infinite;
   animation-delay: var(--d, 0s);
-  filter: drop-shadow(0 0 4px var(--xr-glow));
 }
 
 .pcb .trace.thin { stroke-width: 1.4; opacity: 0.6; }
+
+/* Parlama: filtre yerine altta genis ve soluk ikinci cizgi */
+.pcb .trace.glow {
+  stroke-width: 9;
+  stroke: var(--xr-glow);
+  opacity: 0.5;
+  stroke-linecap: round;
+}
 
 .pcb .pad {
   fill: var(--xr-bg);
@@ -299,10 +300,8 @@ body {
   letter-spacing: 0.18em;
 }
 
-.pcb .pulse {
-  fill: #fff7e6;
-  filter: drop-shadow(0 0 6px var(--xr-accent-2)) drop-shadow(0 0 12px var(--xr-glow));
-}
+.pcb .pulse { fill: #fff7e6; }
+.pcb .pulse-halo { fill: var(--xr-accent-2); opacity: 0.28; }
 
 @keyframes trace-draw {
   0%   { stroke-dashoffset: 1; opacity: 0; }
@@ -340,9 +339,14 @@ body {
   stroke: var(--em-accent);
   stroke-width: 1.6;
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px var(--em-glow));
   stroke-dasharray: 6 10;
   animation: wave-flow 3.2s linear infinite;
+}
+
+.wave path.glow {
+  stroke: var(--em-glow);
+  stroke-width: 7;
+  opacity: 0.45;
 }
 
 .wave path.soft { stroke: var(--em-accent-2); opacity: 0.45; stroke-dasharray: 2 14; animation-duration: 4.6s; }
@@ -392,7 +396,7 @@ body {
   transform: translate(-54%, -52%) rotate(-4deg);
   opacity: 0.11;
   pointer-events: none;
-  filter: drop-shadow(0 0 40px rgba(226, 180, 90, 0.35));
+  will-change: transform;
   animation: mark-breathe 12s ease-in-out infinite;
   transition: opacity 0.8s ease;
 }
@@ -408,7 +412,6 @@ body {
   width: clamp(240px, 27vw, 380px);
   height: auto;
   margin-bottom: 18px;
-  filter: drop-shadow(0 6px 30px rgba(0, 0, 0, 0.55));
 }
 
 /* Hata ayiklama: ?static ile animasyonlar bitmis halde donar */
@@ -456,9 +459,7 @@ body {
   padding: 10px 18px;
   border-radius: 12px;
   border: 1px solid rgba(62, 224, 255, 0.22);
-  background: rgba(7, 11, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(7, 11, 20, 0.8);
   font-variant-numeric: tabular-nums;
 }
 
