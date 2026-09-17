@@ -81,8 +81,10 @@ body {
   pointer-events: auto;
   padding: 10px 18px;
   border-radius: 999px;
-  background: rgba(7, 11, 20, 0.82);
+  background: rgba(7, 11, 20, 0.55);
   border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .brand img {
@@ -171,12 +173,12 @@ body {
 
 /* Tonlama videonun icine islendi; CSS filtre yok */
 .pane-xr .bg-video { object-position: 55% 50%; }
-.pane-xr .bg-video.is-ready { opacity: 0.7; }
-.pane-xr:hover .bg-video.is-ready { opacity: 0.92; transform: scale(1.0) translateZ(0); }
+.pane-xr .bg-video.is-ready { opacity: 0.62; }
+.pane-xr:hover .bg-video.is-ready { opacity: 0.88; transform: scale(1.0) translateZ(0); }
 
 .pane-em .bg-video { object-position: 50% 45%; }
-.pane-em .bg-video.is-ready { opacity: 0.55; }
-.pane-em:hover .bg-video.is-ready { opacity: 0.75; transform: scale(1.0) translateZ(0); }
+.pane-em .bg-video.is-ready { opacity: 0.42; }
+.pane-em:hover .bg-video.is-ready { opacity: 0.62; transform: scale(1.0) translateZ(0); }
 
 /* Video uzerine ton katmani */
 .pane-tint {
@@ -258,13 +260,21 @@ body {
 
 .pcb .trace.thin { stroke-width: 1.4; opacity: 0.6; }
 
-/* Parlama: filtre yerine altta genis ve soluk ikinci cizgi */
-.pcb .trace.glow {
-  stroke-width: 9;
-  stroke: var(--xr-glow);
-  opacity: 0.5;
-  stroke-linecap: round;
+/* Parlama katmani: ayni izler ayri bir SVG'de, tek GPU bulanikligi.
+   Oge basina drop-shadow yerine katman basina bir blur; gorunum ayni, maliyet dusuk. */
+.pcb-glow {
+  filter: blur(7px);
+  will-change: filter, opacity;
+  opacity: 0.8;
 }
+
+.pcb-glow .trace {
+  stroke-width: 6;
+  stroke: var(--xr-accent-2);
+  opacity: 0.9;
+}
+
+.pcb-glow .pad-core { fill: var(--xr-accent-2); }
 
 .pcb .pad {
   fill: var(--xr-bg);
@@ -300,8 +310,8 @@ body {
   letter-spacing: 0.18em;
 }
 
-.pcb .pulse { fill: #fff7e6; }
-.pcb .pulse-halo { fill: var(--xr-accent-2); opacity: 0.28; }
+/* Isik darbesi: radyal gradyan dolgu, filtre yok */
+.pcb .pulse { fill: url(#pulseGrad); }
 
 @keyframes trace-draw {
   0%   { stroke-dashoffset: 1; opacity: 0; }
@@ -343,11 +353,15 @@ body {
   animation: wave-flow 3.2s linear infinite;
 }
 
-.wave path.glow {
-  stroke: var(--em-glow);
-  stroke-width: 7;
-  opacity: 0.45;
+/* Dalga parlamasi: ayni dalga ayri SVG'de, katman basina tek blur */
+.wave-glow {
+  filter: blur(5px);
+  will-change: filter;
+  opacity: 0.7;
 }
+
+.wave-glow path { stroke-width: 4.5; }
+.wave-glow path.soft-glow { display: none; }
 
 .wave path.soft { stroke: var(--em-accent-2); opacity: 0.45; stroke-dasharray: 2 14; animation-duration: 4.6s; }
 
@@ -409,7 +423,7 @@ body {
 }
 
 .xr-wordmark {
-  width: clamp(240px, 27vw, 380px);
+  width: clamp(262px, 29.5vw, 415px);
   height: auto;
   margin-bottom: 18px;
 }
@@ -459,7 +473,9 @@ body {
   padding: 10px 18px;
   border-radius: 12px;
   border: 1px solid rgba(62, 224, 255, 0.22);
-  background: rgba(7, 11, 20, 0.8);
+  background: rgba(7, 11, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-variant-numeric: tabular-nums;
 }
 
@@ -558,7 +574,7 @@ body {
   .pane-content { padding: 110px 26px 70px; }
   .brand-bar { padding-top: 18px; }
   .gate-foot { position: static; padding: 18px 20px 22px; flex-wrap: wrap; row-gap: 6px; }
-  .xr-wordmark { width: min(260px, 74vw); }
+  .xr-wordmark { width: min(286px, 80vw); }
   .xr-watermark { width: 120vw; opacity: 0.09; }
   .brand-tag { display: none; }
   .brand { padding: 8px 14px; }
